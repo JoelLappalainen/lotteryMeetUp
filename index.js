@@ -1,7 +1,7 @@
-// "use strict";
-const nodemailer = require("nodemailer");
-const config = require("./meetUp.config");
-import members from "./testData.js";
+"use strict";
+import members from "./testData";
+import nodemailer from "nodemailer";
+import config from "./meetUp.config";
 
 // create reusable transporter object using the default SMTP transport
 let transporter = nodemailer.createTransport({
@@ -22,27 +22,43 @@ let mailOptions = {
 };
 
 // send mail with defined transport object
-transporter.sendMail(mailOptions, (error, info) => {
-  if (error) {
-    return console.log(error);
+// transporter.sendMail(mailOptions, (error, info) => {
+//   if (error) {
+//     return console.log(error);
+//   }
+//   console.log("Message %s sent: %s", info.messageId, info.response);
+// });
+
+const shuffleMembersArray = members => {
+  for (let i = members.arr.length; i; i--) {
+    let j = Math.floor(Math.random() * i);
+    [members.arr[i - 1], members.arr[j]] = [members.arr[j], members.arr[i - 1]];
   }
-  console.log("Message %s sent: %s", info.messageId, info.response);
-});
+  return members;
+};
 
-function chooseMail() {
-  for (let index = 0; index < members.arr.length; index++) {
-    let paired = false;
+const selectPairs = members => {
+  let newPairs = [];
+  const arr = members.arr;
 
-    while (!paired) {
-      let rnd = Math.floor(Math.random() * members.arr.length);
-      if (
-        members.arr[index].team === members.arr[rnd].team &&
-        !members.arr[index].Lounastanut.includes(members.arr[rnd].id)
-      ) {
-        paired = true;
+  for (let i = 0; i < arr.length; i++) {
+    let j = i + 1;
+    const member = arr[i];
+    const next = arr[j];
+
+    while (j < arr.length && !member.paired) {
+      if (member.team !== next.team && !member.Lounastanut.includes(next.ID)) {
+        newPairs.push([member, next]);
+        member.paired = true;
+        next.paired = true;
+        member.Lounastanut.push(next.ID);
+        next.Lounastanut.push(member.ID);
       }
+      j += 1;
     }
   }
-}
+  console.log(newPairs.length);
+  console.log(newPairs);
+};
 
-chooseMail();
+selectPairs(shuffleMembersArray(members));
